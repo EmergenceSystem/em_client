@@ -21,3 +21,5 @@ actix-web="4.0"
 tokio = { version = "1", features = ["full"] }
 reqwest="0.11"
 lazy_static = "1.4.0"
+textwrap = "0.13"
+term_size = "0.3.2"
