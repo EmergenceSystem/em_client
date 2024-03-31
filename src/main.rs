@@ -6,11 +6,13 @@ use std::io::{self, BufRead};
 use std::path::{Path, PathBuf};
 use std::collections::HashMap;
 
+const CONF_FILE : &str = "emergence.conf";
+
 fn read_emergence_conf() -> Option<HashMap<String, HashMap<String, String>>> {
     let config_path = match dirs::config_dir() {
         Some(mut path) => {
             path.push("emergence");
-            path.push("emergence.conf");
+            path.push(CONF_FILE);
             path
         }
         None => return None, 
@@ -22,7 +24,7 @@ fn read_emergence_conf() -> Option<HashMap<String, HashMap<String, String>>> {
         if let Some(appdata) = std::env::var_os("APPDATA") {
             appdata_path.push(appdata);
             appdata_path.push("emergence");
-            appdata_path.push("emergence.conf");
+            appdata_path.push(CONF_FILE);
 
             if appdata_path.exists() {
                 return Some(read_file(&appdata_path));
@@ -67,10 +69,7 @@ async fn main() {
     let mut server_url = "http://localhost:8080";
     let config_map = match read_emergence_conf() {
         Some(map) => map,
-        None => {
-            println!("Le fichier de configuration n'a pas été trouvé.");
-            return;
-        }
+        None => HashMap::new(),
     };
     if let Some(em_disco) = config_map.get("em_disco") {
         if let Some(url) = em_disco.get("server_url") {
