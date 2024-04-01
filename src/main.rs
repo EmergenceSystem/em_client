@@ -111,7 +111,7 @@ async fn main() {
                         }
                     }
                     let term_width = match term_size::dimensions() {
-                        Some((w, _)) => w as usize,
+                        Some((w, _)) => w as usize - 10,
                         None => 80,
                     };
 
