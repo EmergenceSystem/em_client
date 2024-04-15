@@ -1,5 +1,5 @@
 use reqwest;
-use embryo::{EmbryoList, EmPair};
+use embryo::{EmbryoList};
 use textwrap::wrap;
 use std::fs::File;
 use std::io::{self, BufRead};
@@ -99,13 +99,13 @@ async fn main() {
                 for embryo in filter_response.embryo_list {
                     let mut url = String::new();
                     let mut resume = String::new();
-                    for pair in &embryo.properties {
-                        match pair.name.as_str() {
+                    for (name, value) in &embryo.properties {
+                        match name.as_str() {
                             "url"  => {
-                                url=pair.value.clone();
+                                url=value.clone();
                             },
                             "resume" => {
-                                resume=pair.value.clone();
+                                resume=value.clone();
                             }
                             _ => { }
                         }
@@ -125,11 +125,7 @@ async fn main() {
             }
             Err(_) => {
                 let uri = body.trim_matches('"').to_owned();
-                let em_pair = EmPair {
-                    name: "url".to_owned(),
-                    value: uri,
-                };
-                println!("Single EmPair: {:?}", em_pair);
+                println!("{}", uri);
             }
         }
     } else {
