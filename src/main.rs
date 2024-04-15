@@ -1,25 +1,25 @@
 use reqwest;
 use embryo::{EmbryoList};
 use textwrap::wrap;
-use std::collections::HashMap;
+use std::env;
 
 #[tokio::main]
 async fn main() {
-    let mut server_url = "http://localhost:8080";
-    let config_map = match embryo::read_emergence_conf() {
-        Some(map) => map,
-        None => HashMap::new(),
+    let server_url = match env::var("server_url") {
+        Ok(url) => url,
+        Err(_) => {
+            let config_map = embryo::read_emergence_conf().unwrap_or_default();
+            match config_map.get("em_disco").and_then(|em_disco| em_disco.get("server_url")) {
+                Some(url) => url.clone(),
+                None => "http://localhost:8080".to_string(),
+            }
+        },
     };
-    if let Some(em_disco) = config_map.get("em_disco") {
-        if let Some(url) = em_disco.get("server_url") {
-            server_url = url;
-        }
-    }
 
     let client = reqwest::Client::new();
     let args: Vec<String> = std::env::args().collect();
     let query = args[1..].join(" ");
- 
+
     let response = client
         .post(&format!("{}/query", server_url))
         .header(reqwest::header::CONTENT_TYPE, "application/json")
