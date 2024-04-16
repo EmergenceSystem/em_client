@@ -1,20 +1,10 @@
 use reqwest;
-use embryo::{EmbryoList};
 use textwrap::wrap;
-use std::env;
+use embryo::EmbryoList;
 
 #[tokio::main]
 async fn main() {
-    let server_url = match env::var("server_url") {
-        Ok(url) => url,
-        Err(_) => {
-            let config_map = embryo::read_emergence_conf().unwrap_or_default();
-            match config_map.get("em_disco").and_then(|em_disco| em_disco.get("server_url")) {
-                Some(url) => url.clone(),
-                None => "http://localhost:8080".to_string(),
-            }
-        },
-    };
+    let server_url = embryo::get_em_disco_url();
 
     let client = reqwest::Client::new();
     let args: Vec<String> = std::env::args().collect();
