@@ -10,13 +10,18 @@ async fn main() {
     let args: Vec<String> = std::env::args().collect();
     let query = args[1..].join(" ");
 
-    let response = client
+    let response = match client
         .post(&format!("{}/query", server_url))
         .header(reqwest::header::CONTENT_TYPE, "application/json")
         .body(query)
         .send()
-        .await
-        .expect("Failed to send HTTP request");
+        .await {
+            Ok(res) => res,
+            Err(err) => {
+                eprintln!("Failed to send HTTP request to {} : \n\t{}", server_url, err);
+                return;
+            }
+        };
 
     if response.status().is_success() {
         let body = response.text().await.expect("Failed to get response body");
