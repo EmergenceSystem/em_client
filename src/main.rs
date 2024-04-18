@@ -11,7 +11,6 @@ const EMBOX_URL : &str = "http://localhost:{}/embox";
 
 #[actix_web::post("/embox")]
 async fn embox(json: web::Json<serde_json::Value>) -> impl Responder {
-    println!("from EMBOX");
     let filter_response: Result<EmbryoList, _> = serde_json::from_str(json.to_string().as_str());
 
     match filter_response {
