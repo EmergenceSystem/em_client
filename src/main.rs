@@ -3,11 +3,8 @@ use textwrap::wrap;
 use embryo::EmbryoList;
 use std::io::{self, Write,stdin};
 use actix_web::{HttpResponse, Responder, web, App, HttpServer};
-use std::thread;
+use std::{env, thread};
 use std::sync::mpsc;
-
-const EMBOX_PORT : i32=8079;
-const EMBOX_URL : &str = "http://localhost:{}/embox";
 
 #[actix_web::post("/embox")]
 async fn embox(json: web::Json<serde_json::Value>) -> impl Responder {
@@ -50,11 +47,11 @@ async fn embox(json: web::Json<serde_json::Value>) -> impl Responder {
     HttpResponse::Ok().body("Embox OK")
 }
 
-async fn start_server(tx: mpsc::Sender<()>) {
+async fn start_server(tx: mpsc::Sender<()>, embox_port: String) {
     let server = HttpServer::new(|| {
         App::new().service(embox)
     })
-    .bind(format!("0.0.0.0:{}", EMBOX_PORT))
+    .bind(format!("0.0.0.0:{}", embox_port))
         .expect("Failed to bind address")
         .run();
     tx.send(()).expect("Failed to send message");
@@ -63,10 +60,31 @@ async fn start_server(tx: mpsc::Sender<()>) {
 
 #[tokio::main]
 async fn main() {
+    let embox_url = match env::var("embox_url") {
+        Ok(url) => url,
+        Err(_) => {
+            let config_map = embryo::read_emergence_conf().unwrap_or_default();
+            match config_map.get("embox").and_then(|em_disco| em_disco.get("url")) {
+                Some(url) => url.clone(),
+                None => "http://localhost:8079/embox".to_string(),
+            }
+        },
+    };
+    let embox_port = match env::var("embox_port") {
+        Ok(url) => url,
+        Err(_) => {
+            let config_map = embryo::read_emergence_conf().unwrap_or_default();
+            match config_map.get("embox").and_then(|em_disco| em_disco.get("port")) {
+                Some(port) => port.clone(),
+                None => "8079".to_string(),
+            }
+        },
+    };
+
     let (tx, rx) = mpsc::channel();
     thread::spawn(move || {
         let rt = tokio::runtime::Runtime::new().unwrap();
-        rt.block_on(start_server(tx));
+        rt.block_on(start_server(tx, embox_port));
     });
     rx.recv().expect("Failed to receive message");
     println!("Emergence Client V0.1.0");
@@ -74,8 +92,6 @@ async fn main() {
     let server_url = embryo::get_em_disco_url();
     let client = reqwest::Client::new();
     let mut query = String::new();
-
-    let embox_url = EMBOX_URL.replace("{}", &EMBOX_PORT.to_string());
 
     loop {
         print!("> ");
