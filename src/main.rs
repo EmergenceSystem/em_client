@@ -13,7 +13,7 @@ async fn main() {
         print!("> ");
         io::stdout().flush().expect("Failed to flush stdout");
         if let Ok(bytes_read) = stdin().read_line(&mut query) {
-            if bytes_read == 0 {
+            if bytes_read == 0 || "exit" == query.trim() || "quit" == query.trim() {
                 break;
             }
             let response = match client
